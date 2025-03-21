@@ -1,0 +1,43 @@
+---
+MessageFormat: JSON
+MessageType: PQTY
+Message: |
+  {
+    "user": "alice",
+    "action": "login",
+    "status": "success",
+    "timestamp": "2025-03-09T12:34:56Z"
+  }
+---
+MessageFormat: XML
+MessageType: STST 
+Message: |
+  <?xml version="1.0" encoding="UTF-8"?>
+  <message>
+    <user>charlie</user>
+    <action>update_profile</action>
+    <status>failure</status>
+    <timestamp>2025-03-09T12:36:00Z</timestamp>
+  </message>
+---
+MessageFormat: JSON
+MessageType: PQTY
+Message: |
+  {
+    "user": "alice",
+    "action": "login",
+    "status": "success",
+    "timestamp": "2025-03-09T12:34:56Z"
+  }
+---
+MessageFormat: XML
+MessageType: STST 
+Message: |
+  <?xml version="1.0" encoding="UTF-8"?>
+  <message>
+    <user>charlie</user>
+    <action>update_profile</action>
+    <status>failure</status>
+    <timestamp>2025-03-09T12:36:00Z</timestamp>
+  </message>
+---
