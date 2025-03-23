@@ -2,10 +2,12 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"strings"
 
 	"littleAPITestingTool/fileio"
 
@@ -23,34 +25,32 @@ func main() {
 	const configPath string = "config.json"
 	const contentPath string = "data.yaml"
 
-	var apiEndpoint, username, password string
-	var err error
-	apiEndpoint, _, _, err = fileio.ParseConfig(configPath)
-	if err != nil {
-		log.Fatalf("Error unmarshalling config.json: %v", err)
-	}
-
 	prompt := promptui.Select{
 		Label: "Select an option:",
 		Items: []string{"Reload endpoint configurations", "Test messages", "Exit"},
 	}
+	config, err := fileio.ParseConfig(configPath)
+	if err != nil {
+		log.Fatalf("Error unmarshalling config.json: %v", err)
+	}
+	fmt.Printf("API Endpoint: %s\nAuthenticationType: %s\nUsername: %s\nPassword: %s\n", config.APIEndpoint, config.AuthType, config.Username, config.Password)
 
 mainLoop:
 	for {
 		switch index, _, _ := prompt.Run(); index {
 		case 0:
-			apiEndpoint, username, password, err = fileio.ParseConfig(configPath)
+			config, err = fileio.ParseConfig(configPath)
 			if err != nil {
 				log.Fatalf("Error unmarshalling config.json: %v", err)
 			}
-			fmt.Printf("API Endpoint: %s\nUsername: %s\nPassword: %s\n", apiEndpoint, username, password)
+			fmt.Printf("API Endpoint: %s\nAuthenticationType: %s\nUsername: %s\nPassword: %s\n", config.APIEndpoint, config.AuthType, config.Username, config.Password)
 		case 1:
 			messages, err := readMessages(contentPath)
 			if err != nil {
 				log.Fatalf("Error reading messages: %v", err)
 			}
 			for _, msg := range messages {
-				if err := sendRequest(apiEndpoint, msg); err != nil {
+				if err := sendRequest(*config, msg); err != nil {
 					log.Printf("Error sending message: %v", err)
 				} else {
 					fmt.Println("Message sent successfully!")
@@ -86,13 +86,42 @@ func readMessages(path string) ([]Message, error) {
 	return messages, nil
 }
 
-func sendRequest(apiEndpoint string, msg Message) error {
+func sendRequest(config fileio.Config, msg Message) error {
 	data, err := yaml.Marshal(&msg)
 	if err != nil {
 		return fmt.Errorf("error marshaling message: %v", err)
 	}
 
-	resp, err := http.Post(apiEndpoint, "application/x-yaml", bytes.NewReader(data))
+	var contentType string
+	var authHeaderValue string
+	switch strings.ToLower(msg.MessageFormat) {
+	case "xml":
+		contentType = "application/xml"
+	case "json":
+		contentType = "application/json"
+	default:
+		return fmt.Errorf("MessageFormat %s not managed", msg.MessageFormat)
+	}
+
+	client := &http.Client{}
+
+	req, err := http.NewRequest("POST", config.APIEndpoint, bytes.NewReader(data))
+	if err != nil {
+		return fmt.Errorf("error creating POST request: %v", err)
+	}
+
+	switch strings.ToLower(config.AuthType) {
+	case "basic":
+		authHeaderValue = "basic " + base64.StdEncoding.EncodeToString([]byte(config.Username+":"+config.Password))
+		req.Header.Add("Authorization", authHeaderValue)
+	case "none", "", "anonymous":
+	default:
+		return fmt.Errorf("unhandled auth type")
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return fmt.Errorf("error making HTTP POST request: %v", err)
 	}

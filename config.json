@@ -1,5 +1,7 @@
 {
-  "api_endpoint": "https://api.example.com",
+  "apiEndpoint": "https://api.example.com",
+  "dynamicPath": false,
+  "AuthType": "basic",
   "Username": "your_username",
   "Password": "your_password"
 }
