@@ -104,8 +104,12 @@ func sendRequest(config fileio.Config, msg Message) error {
 	}
 
 	client := &http.Client{}
+	apiEndpoint := config.APIEndpoint
+	if config.DynamicPath {
+		apiEndpoint = apiEndpoint + "/" + msg.MessageType
+	}
 
-	req, err := http.NewRequest("POST", config.APIEndpoint, bytes.NewReader(data))
+	req, err := http.NewRequest("POST", apiEndpoint, bytes.NewReader(data))
 	if err != nil {
 		return fmt.Errorf("error creating POST request: %v", err)
 	}
