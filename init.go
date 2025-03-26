@@ -29,7 +29,6 @@ func main() {
 		log.Fatalf("Error unmarshalling config.json: %v", err)
 	}
 	fmt.Printf("API Endpoint: %s\nAuthenticationType: %s\nUsername: %s\nPassword: %s\n", config.APIEndpoint, config.AuthType, config.Username, config.Password)
-
 mainLoop:
 	for {
 		switch index, _, _ := prompt.Run(); index {
@@ -84,6 +83,7 @@ func readMessages(path string) ([]requests.Message, error) {
 			return nil, fmt.Errorf("error decoding YAML: %v", err)
 		}
 		messages = append(messages, msg)
+		fmt.Println(msg)
 	}
 	return messages, nil
 }
