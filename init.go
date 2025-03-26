@@ -1,33 +1,28 @@
 package main
 
 import (
-	"bytes"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
-	"net/http"
-	"strings"
 
 	"littleAPITestingTool/fileio"
+	"littleAPITestingTool/requests"
+	"littleAPITestingTool/simulation"
 
 	"github.com/manifoldco/promptui"
 	"gopkg.in/yaml.v3"
 )
 
-type Message struct {
-	MessageFormat string `yaml:"MessageFormat"`
-	MessageType   string `yaml:"MessageType"`
-	Message       string `yaml:"Message"`
-}
-
 func main() {
 	const configPath string = "config.json"
 	const contentPath string = "data.yaml"
+	const simConfigPath string = "sim.yaml"
+
+	simulationRunning := false
 
 	prompt := promptui.Select{
 		Label: "Select an option:",
-		Items: []string{"Reload endpoint configurations", "Test messages", "Exit"},
+		Items: []string{"Reload endpoint configurations", "Test messages", "Start simulation", "Exit"},
 	}
 	config, err := fileio.ParseConfig(configPath)
 	if err != nil {
@@ -50,13 +45,20 @@ mainLoop:
 				log.Fatalf("Error reading messages: %v", err)
 			}
 			for _, msg := range messages {
-				if err := sendRequest(*config, msg); err != nil {
+				if err := requests.SendRequest(*config, msg); err != nil {
 					log.Printf("Error sending message: %v", err)
 				} else {
 					fmt.Println("Message sent successfully!")
 				}
 			}
 		case 2:
+			if !simulationRunning {
+				simulation.RunSimulation(simConfigPath, *config)
+				fmt.Println("Simulation started.")
+			} else {
+				fmt.Println("Simulation already running.")
+			}
+		case 3:
 			break mainLoop
 		default:
 			fmt.Println("Invalid selection.")
@@ -64,17 +66,17 @@ mainLoop:
 	}
 }
 
-func readMessages(path string) ([]Message, error) {
+func readMessages(path string) ([]requests.Message, error) {
 	reader, err := fileio.GetFileIORead(path)
 	if err != nil {
 		return nil, fmt.Errorf("error reading file: %v", err)
 	}
 	defer reader.Close()
 
-	var messages []Message
+	var messages []requests.Message
 	decoder := yaml.NewDecoder(reader)
 	for {
-		var msg Message
+		var msg requests.Message
 		if err := decoder.Decode(&msg); err != nil {
 			if err == io.EOF {
 				break
@@ -84,53 +86,4 @@ func readMessages(path string) ([]Message, error) {
 		messages = append(messages, msg)
 	}
 	return messages, nil
-}
-
-func sendRequest(config fileio.Config, msg Message) error {
-	data, err := yaml.Marshal(&msg)
-	if err != nil {
-		return fmt.Errorf("error marshaling message: %v", err)
-	}
-
-	var contentType string
-	var authHeaderValue string
-	switch strings.ToLower(msg.MessageFormat) {
-	case "xml":
-		contentType = "application/xml"
-	case "json":
-		contentType = "application/json"
-	default:
-		return fmt.Errorf("MessageFormat %s not managed", msg.MessageFormat)
-	}
-
-	client := &http.Client{}
-	apiEndpoint := config.APIEndpoint
-	if config.DynamicPath {
-		apiEndpoint = apiEndpoint + "/" + msg.MessageType
-	}
-
-	req, err := http.NewRequest("POST", apiEndpoint, bytes.NewReader(data))
-	if err != nil {
-		return fmt.Errorf("error creating POST request: %v", err)
-	}
-
-	switch strings.ToLower(config.AuthType) {
-	case "basic":
-		authHeaderValue = "basic " + base64.StdEncoding.EncodeToString([]byte(config.Username+":"+config.Password))
-		req.Header.Add("Authorization", authHeaderValue)
-	case "none", "", "anonymous":
-	default:
-		return fmt.Errorf("unhandled auth type")
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("error making HTTP POST request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	fmt.Printf("Response: %s\n", resp.Status)
-	return nil
 }
