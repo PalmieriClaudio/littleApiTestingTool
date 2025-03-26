@@ -13,13 +13,13 @@ import (
 )
 
 type Message struct {
-	MessageFormat string
-	MessageType   string
-	Message       string
+	MessageFormat string `yaml:"MessageFormat"`
+	MessageType   string `yaml:"MessageType"`
+	Message       string `yaml:"Message"`
 }
 
 func SendRequest(config fileio.Config, msg Message) error {
-	data, err := yaml.Marshal(&msg)
+	_, err := yaml.Marshal(&msg)
 	if err != nil {
 		return fmt.Errorf("error marshaling message: %v", err)
 	}
@@ -41,7 +41,7 @@ func SendRequest(config fileio.Config, msg Message) error {
 		apiEndpoint = apiEndpoint + "/" + msg.MessageType
 	}
 
-	req, err := http.NewRequest("POST", apiEndpoint, bytes.NewReader(data))
+	req, err := http.NewRequest("POST", apiEndpoint, bytes.NewReader([]byte(msg.Message)))
 	if err != nil {
 		return fmt.Errorf("error creating POST request: %v", err)
 	}
