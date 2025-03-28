@@ -53,6 +53,7 @@ mainLoop:
 		case 2:
 			if !simulationRunning {
 				simulation.RunSimulation(simConfigPath, *config)
+				simulationRunning = true
 				fmt.Println("Simulation started.")
 			} else {
 				fmt.Println("Simulation already running.")

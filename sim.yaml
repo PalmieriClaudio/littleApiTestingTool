@@ -1,0 +1,33 @@
+- MessageFormat: JSON
+  MessageType: Temperature
+  Message: '{"sensor_id": "{{ .sensor_id }}", "temperature": "{{ .temperature }}"}'
+  Variables:
+    sensor_id:
+      Type: static
+      Value: "12345"
+    temperature:
+      Type: random
+      Value: "[20, 30]" # Random temperature between 20 and 30
+  Frequency: "22s"
+- MessageFormat: XML
+  MessageType: Humidity
+  Message: '<sensor id="{{ .sensor_id }}"><humidity>{{ .humidity }}</humidity></sensor>'
+  Variables:
+    sensor_id:
+      Type: static
+      Value: "67890"
+    humidity:
+      Type: range
+      Value: "[40, 50]" # Sequential humidity values from 40 to 50
+  Frequency: "25s"
+- MessageFormat: JSON
+  MessageType: Status
+  Message: '{"device": "{{ .device }}", "status": "{{ .status }}"}'
+  Variables:
+    device:
+      Type: static
+      Value: "DeviceA"
+    status:
+      Type: sequence
+      Value: "[active, idle, maintenance]" # Rotates through these values
+  Frequency: "10s"
