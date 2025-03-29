@@ -1,0 +1,33 @@
+- MessageFormat: JSON # Format of the message, this will be used to evaluate the proper contentType for the HTML request
+  MessageType: Temperature # Type of the message, this is used to complete the API endpoint in case the endpoint is set as dynamic
+  Message: '{"sensor_id": "{{ .sensor_id }}", "temperature": "{{ .temperature }}"}' # The structure of the message body. variables are defined as {{ .variableName }}. The '.' is obligatory.
+  Variables: # Variables sub-struct
+    sensor_id: # Variable name, used to parse the position where to substitute the value in the above structure.
+      Type: static # Variable type. List of variable types and behaviours can be found in README.md
+      Value: "12345" # Variable value/values
+    temperature: # Multiple variables can be defined simply adding them with the same firmatting.
+      Type: random
+      Value: "[20, 30]" # Lists of values used for parsing of variables should be written in between '[]'
+  Frequency: "22s" # Amount of time wait in between repeated messages. These can be written in the format {amount}{unit of measurement}. Example: 2m55s.
+- MessageFormat: XML # messages to be processed in parallel can be added following proper YAML formatting.
+  MessageType: Humidity
+  Message: '<sensor id="{{ .sensor_id }}"><humidity>{{ .humidity }}</humidity></sensor>'
+  Variables:
+    sensor_id:
+      Type: static
+      Value: "67890"
+    humidity:
+      Type: range
+      Value: "[40, 50]" # Sequential humidity values from 40 to 50
+  Frequency: "25s"
+- MessageFormat: JSON
+  MessageType: Status
+  Message: '{"device": "{{ .device }}", "status": "{{ .status }}"}'
+  Variables:
+    device:
+      Type: static
+      Value: "DeviceA"
+    status:
+      Type: sequence
+      Value: "[active, idle, maintenance]" # Rotates through these values
+  Frequency: "10s"
