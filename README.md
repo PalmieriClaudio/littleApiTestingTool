@@ -3,9 +3,8 @@
  This is being built as my personal project with a very specific use case in my company, so it focuses specifically on generating POST requests to a dynamically generated endpoint.
  While the endpoint can indeed be dynamically generated, and the generation could be used to define arbitrary endpoints, the tool is ment for a very specifically formatted endpoint:
   'https://ADDRESS:PORT/API_ROUTE/{DYNAMIC_ENDPOINT}'
- Currently, as previously stated, the program only manages POST requests since that was my needed use case, but this can easily changed in the code to manage different HTTP requests.
+ Currently, as previously stated, the program only manages POST requests since that was my needed use case, but this can easily be changed in the code to manage different HTTP requests.
  This is because my use case specifically requires only POST requests, so I thought it unnecessary to add more burden on the configuration of messages.
- That being said I will probably add other types of HTTP reqests shortly.
 
 ## Build
 Pre-built binaries can be downloaded from the Releases tab, otherwhise they can be built as follows.
