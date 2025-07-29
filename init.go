@@ -55,7 +55,6 @@ mainLoop:
 				go func() {
 					simulation.RunSimulation(simConfigPath, *config)
 				}()
-				// simulation.RunSimulation(simConfigPath, *config)
 				simulationRunning = true
 				fmt.Println("Simulation started.")
 			} else {

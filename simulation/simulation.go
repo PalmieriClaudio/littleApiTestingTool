@@ -23,6 +23,7 @@ type simMessage struct {
 	MessageFormat string               `yaml:"MessageFormat"`
 	MessageType   string               `yaml:"MessageType"`
 	Message       string               `yaml:"Message"`
+	Id            int                  `yaml:"Id"`
 	Variables     map[string]variables `yaml:"Variables"`
 	Frequency     string               `yaml:"Frequency"`
 }
@@ -32,10 +33,12 @@ type variables struct {
 	Value string `yaml:"Value"`
 }
 
-// type parsedVars map[string]string
-
 func RunSimulation(path string, config fileio.Config) error {
 	var wg sync.WaitGroup
+
+	// Define sync map for messages to communicate if they have ran
+	var msgCounterStore sync.Map[int, int]
+
 	simMessages, err := loadSimulationConfig(path)
 	if err != nil {
 		return fmt.Errorf("failed to load simulation config: %v", err)
@@ -203,6 +206,12 @@ func composeAndSendRequest(parsedVars map[string]any, tmpl *template.Template, c
 	}
 	content := buf.String()
 	fmt.Printf("%v\n", content)
+	// Check in case of dependencies if dependencies have ran
+	// If not, wait 100ms and try again.
+	for !dependenciesFinished(m.Id,m.){
+		time.Sleep(100 * time.Millisecond)
+	}
+
 	if err := requests.SendRequest(config, requests.Message{
 		MessageFormat: m.MessageFormat,
 		MessageType:   m.MessageType,
