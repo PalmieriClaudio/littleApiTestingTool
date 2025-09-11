@@ -10,11 +10,11 @@
 Pre-built binaries can be downloaded from the Releases tab, otherwhise they can be built as follows.
  Requirements:
   -The golang compiler
- '''bash
+'''bash
  git clone https://github.com/PalmieriClaudio/littleApiTestingTool.git
  cd littleApiTestingTool
  go build init.go
- '''
+'''
  this will generate an executable file.
  The configuration files found in the folder with the executable are necessary to configure the endpoints and requests sent to them.
  Currently those need to be setup in the same folder as the executable, this will be changed in the future.
